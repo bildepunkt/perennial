@@ -1,0 +1,19 @@
+{
+  "name": "perennial",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Chris Peters",
+  "license": "ISC",
+  "devDependencies": {
+    "babel": "^5.5.6",
+    "babelify": "^6.1.2",
+    "browserify": "^10.2.4",
+    "gulp": "^3.9.0",
+    "gulp-babel": "^5.1.0",
+    "vinyl-source-stream": "^1.1.0"
+  }
+}
