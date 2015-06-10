@@ -6,22 +6,44 @@ class Entity {
     constructor() {
         this._x = 0;
         this._y = 0;
-        this._width = 32;
-        this._height = 32;
+        this._width = 0;
+        this._height = 0;
+        this._srcX = 0;
+        this._srcY = 0;
+        this._srcWidth = 0;
+        this._srcHeight = 0;
+        this._scaleX = 1;
+        this._scaleY = 1;
+        this._rotation = 0;
+        this._offsetX = 0;
+        this._offsetY = 0;
+
+        this._opacity = 1;
+        this._composite = 'source-over';
+
         this._dirty = false;
         this._dirtyMembers = {};
+
         this._uid = uid++;
         this._children = [];
     }
 
-    set(name, value) {
-        this._dirty = true;
+    set(keyOrObj, value) {
+        if (typeof keyOrObj === 'object' && keyOrObj !== null) {
+            for(let key in keyOrObj) {
+                this._dirtyMembers['_' + key] = keyOrObj[key];
+            }
 
-        this._dirtyMembers['_' + name] = value;
+            this._dirty = true;
+        } else if (typeof keyOrObj === 'string') {
+            this._dirtyMembers['_' + keyOrObj] = value;
+
+            this._dirty = true;
+        }
     }
 
-    get(name) {
-        return this['_' + name];
+    get(key) {
+        return this['_' + key];
     }
 
     getChild(child) {
@@ -48,10 +70,10 @@ class Entity {
         this._children.splice(this.getChildIndex(child), 1);
     }
 
-    update() {
+    _update(context) {
         if (this._dirty) {
             for(let item of this._children) {
-                item.updateFromParent(this._dirtyMembers);
+                item._updateFromParent(this._dirtyMembers);
             }
 
             for(let key in this._dirtyMembers) {
@@ -63,15 +85,17 @@ class Entity {
                 }
             }
 
+            this._render(context);
+
             this._dirty = false;
         }
 
         for(let item of this._children) {
-            item.update();
+            item._update();
         }
     }
 
-    updateFromParent(dirtyMembers) {
+    _updateFromParent(dirtyMembers) {
         for(let key in dirtyMembers) {
             let val = dirtyMembers[key];
             if (typeof val !== 'undefined') {
@@ -80,8 +104,32 @@ class Entity {
         }
 
         for(let item of this._children) {
-            item.updateFromParent(dirtyMembers);
+            item._updateFromParent(dirtyMembers);
         }
+    }
+
+    _render(context) {
+        context.save();
+        context.translate(Math.floor(this._x), Math.floor(this._y));
+
+        if (this._rotation !== 0) {
+            context.translate(this._offsetX, this._offsetY);
+            context.rotate((Math.PI / 180) * this._rotation);
+            context.translate(-this._offsetX, -this._offsetY);
+        }
+
+        if (this._scaleX !== 1 || this._scaleY !== 1) {
+            context.translate(this._offsetX, this._offsetY);
+            context.scale(this._scaleX, this._scaleY);
+            context.translate(-this._offsetX, -this._offsetY);
+        }
+
+        context.globalAlpha = this._opacity;
+        context.globalCompositeOperation = this._composite;
+
+        this._renderType(context);
+
+        context.restore();
     }
 }
 

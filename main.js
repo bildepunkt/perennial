@@ -1,15 +1,34 @@
 'use strict';
 
-import Entity from './src/entity';
+import Rectangle from './src/rectangle';
 
-let foo = new Entity();
-let bar = new Entity();
-let baz = new Entity();
-bar.addChild(baz);
-foo.addChild(bar);
+let rect = new Rectangle();
+rect.set({
+    'x': 32,
+    'y': 32,
+    'width': 32,
+    'height': 32,
+    'offsetX': 16,
+    'offsetY': 16,
+    'fillStyle': '#ccc'
+});
 
-foo.set('x', 8);
-bar.set('y', 16);
-foo.update();
+let canDimensions = 256;
+let can = document.querySelector('canvas');
+let ctx = can.getContext('2d');
+let rotation = 0;
 
-console.log(foo);
+can.width = canDimensions;
+can.height = canDimensions;
+
+function update() {
+    ctx.clearRect(0, 0, canDimensions, canDimensions);
+
+    rotation += 4;
+    rect.set('rotation', rotation);
+    rect._update(ctx);
+
+    requestAnimationFrame(update);
+}
+
+update();
