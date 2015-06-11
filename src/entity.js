@@ -22,7 +22,6 @@ class Entity {
         this._composite = 'source-over';
 
         this._dirty = false;
-        this._dirtyMembers = {};
 
         this._uid = uid++;
         this._children = [];
@@ -31,12 +30,12 @@ class Entity {
     set(keyOrObj, value) {
         if (typeof keyOrObj === 'object' && keyOrObj !== null) {
             for(let key in keyOrObj) {
-                this._dirtyMembers['_' + key] = keyOrObj[key];
+                this['_' + key] = keyOrObj[key];
             }
 
             this._dirty = true;
-        } else if (typeof keyOrObj === 'string') {
-            this._dirtyMembers['_' + keyOrObj] = value;
+        } else if (typeof keyOrObj === 'string' && typeof value !== 'undefined') {
+            this['_' + keyOrObj] = value;
 
             this._dirty = true;
         }
@@ -70,45 +69,11 @@ class Entity {
         this._children.splice(this.getChildIndex(child), 1);
     }
 
-    _update(context) {
-        if (this._dirty) {
-            for(let item of this._children) {
-                item._updateFromParent(this._dirtyMembers);
-            }
-
-            for(let key in this._dirtyMembers) {
-                let val = this._dirtyMembers[key];
-                if (typeof val !== 'undefined') {
-                    this[key] = val;
-
-                    this._dirtyMembers[key] = undefined;
-                }
-            }
-
-            this._render(context);
-
-            this._dirty = false;
+    render(context) {
+        if (! this._dirty) {
+            return;
         }
 
-        for(let item of this._children) {
-            item._update();
-        }
-    }
-
-    _updateFromParent(dirtyMembers) {
-        for(let key in dirtyMembers) {
-            let val = dirtyMembers[key];
-            if (typeof val !== 'undefined') {
-                this[key] = val;
-            }
-        }
-
-        for(let item of this._children) {
-            item._updateFromParent(dirtyMembers);
-        }
-    }
-
-    _render(context) {
         context.save();
         context.translate(Math.floor(this._x), Math.floor(this._y));
 
@@ -129,7 +94,14 @@ class Entity {
 
         this._renderType(context);
 
+        for(let child of this._children) {
+            child._dirty = true;
+            child.render(context);
+        }
+
         context.restore();
+
+        this._dirty = false;
     }
 }
 
